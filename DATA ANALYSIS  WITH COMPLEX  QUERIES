@@ -1,0 +1,133 @@
+mysql> CREATE DATABASE StudentPerformanceDB;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> USE StudentPerformanceDB;
+Database changed
+mysql> CREATE TABLE Students (
+    ->     student_id INT PRIMARY KEY,
+    ->     name VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CREATE TABLE Marks (
+    ->     mark_id INT PRIMARY KEY,
+    ->     student_id INT,
+    ->     subject VARCHAR(50),
+    ->     marks INT,
+    ->     FOREIGN KEY (student_id) REFERENCES Students(student_id)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> INSERT INTO Students (student_id, name) VALUES
+    -> (1, 'Akash'),
+    -> (2, 'Ravi'),
+    -> (3, 'Priya'),
+    -> (4, 'Neha'),
+    -> (5, 'Aman');
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Marks (mark_id, student_id, subject, marks) VALUES
+    -> (1, 1, 'Math', 85),
+    -> (2, 1, 'Science', 82),
+    -> (3, 2, 'Math', 90),
+    -> (4, 2, 'Science', 88),
+    -> (5, 3, 'Math', 75),
+    -> (6, 3, 'Science', 72),
+    -> (7, 4, 'Math', 78),
+    -> (8, 4, 'Science', 79),
+    -> (9, 5, 'Math', 60),
+    -> (10, 5, 'Science', 62);
+Query OK, 10 rows affected (0.01 sec)
+Records: 10  Duplicates: 0  Warnings: 0
+
+mysql> SELECT s.name, sa.average_marks
+    -> FROM (
+    ->     SELECT student_id, AVG(marks) AS average_marks
+    ->     FROM Marks
+    ->     GROUP BY student_id
+    -> ) AS sa
+    -> JOIN Students s ON s.student_id = sa.student_id
+    -> ORDER BY sa.average_marks DESC;
++-------+---------------+
+| name  | average_marks |
++-------+---------------+
+| Ravi  |       89.0000 |
+| Akash |       83.5000 |
+| Neha  |       78.5000 |
+| Priya |       73.5000 |
+| Aman  |       61.0000 |
++-------+---------------+
+5 rows in set (0.01 sec)
+
+mysql> SET @rank := 0;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql>
+mysql> SELECT
+    ->     s.name,
+    ->     sa.average_marks,
+    ->     @rank := @rank + 1 AS rank
+    -> FROM (
+    ->     SELECT student_id, AVG(marks) AS average_marks
+    ->     FROM Marks
+    ->     GROUP BY student_id
+    ->     ORDER BY AVG(marks) DESC
+    -> ) AS sa
+    -> JOIN Students s ON s.student_id = sa.student_id;
++-------+---------------+------+
+| name  | average_marks | rank |
++-------+---------------+------+
+| Akash |       83.5000 |    1 |
+| Ravi  |       89.0000 |    2 |
+| Priya |       73.5000 |    3 |
+| Neha  |       78.5000 |    4 |
+| Aman  |       61.0000 |    5 |
++-------+---------------+------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT s.name, m.marks AS math_marks
+    -> FROM Students s
+    -> JOIN Marks m ON s.student_id = m.student_id
+    -> WHERE m.subject = 'Math'
+    ->   AND m.marks > (
+    ->       SELECT AVG(marks) FROM Marks WHERE subject = 'Math'
+    ->   );
++-------+------------+
+| name  | math_marks |
++-------+------------+
+| Akash |         85 |
+| Ravi  |         90 |
+| Neha  |         78 |
++-------+------------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT
+    ->     s.name,
+    ->     m.subject,
+    ->     m.marks,
+    ->     ROUND(sa.student_avg, 2) AS student_avg,
+    ->     m.marks - sa.student_avg AS diff_from_avg
+    -> FROM Marks m
+    -> JOIN Students s ON s.student_id = m.student_id
+    -> JOIN (
+    ->     SELECT student_id, AVG(marks) AS student_avg
+    ->     FROM Marks
+    ->     GROUP BY student_id
+    -> ) AS sa ON m.student_id = sa.student_id;
++-------+---------+-------+-------------+---------------+
+| name  | subject | marks | student_avg | diff_from_avg |
++-------+---------+-------+-------------+---------------+
+| Akash | Math    |    85 |       83.50 |        1.5000 |
+| Akash | Science |    82 |       83.50 |       -1.5000 |
+| Ravi  | Math    |    90 |       89.00 |        1.0000 |
+| Ravi  | Science |    88 |       89.00 |       -1.0000 |
+| Priya | Math    |    75 |       73.50 |        1.5000 |
+| Priya | Science |    72 |       73.50 |       -1.5000 |
+| Neha  | Math    |    78 |       78.50 |       -0.5000 |
+| Neha  | Science |    79 |       78.50 |        0.5000 |
+| Aman  | Math    |    60 |       61.00 |       -1.0000 |
+| Aman  | Science |    62 |       61.00 |        1.0000 |
++-------+---------+-------+-------------+---------------+
+10 rows in set (0.00 sec)
+
