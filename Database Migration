@@ -1,0 +1,30 @@
+//ySQL Table (Before Migration)
+CREATE TABLE students (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    age INT
+);
+
+INSERT INTO students VALUES
+(1, 'Akash', 'akash@example.com', 21),
+(2, 'Neha', 'neha@example.com', 22);
+
+
+//Export Data from MySQL using this command 
+mysqldump -u root -p --compatible=postgresql --no-create-info your_db_name > data.sql
+
+  
+  //Convert Data Types (Optional Script Edits)
+  //Create Table in PostgreSQL
+  CREATE TABLE students (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    age INT
+);
+
+
+//mport Data into PostgreSQL using psql command
+psql -U postgres -d your_postgres_db -f data.sql
+
